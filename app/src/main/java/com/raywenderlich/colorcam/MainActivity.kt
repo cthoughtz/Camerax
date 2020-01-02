@@ -64,8 +64,9 @@ class MainActivity : AppCompatActivity() {
     val previewUseCase = createPreviewUseCase()
     val imageCapture = createImageCaptureUseCase()
     val luminosityAnalyzer = createLuminosityAnalyzer()
+    val qrCodeAnalyzer = createQRCodeAnalyzer()
 
-    CameraX.bindToLifecycle(this, previewUseCase, imageCapture, luminosityAnalyzer)
+    CameraX.bindToLifecycle(this, previewUseCase, imageCapture, qrCodeAnalyzer)
   }
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -202,6 +203,22 @@ class MainActivity : AppCompatActivity() {
     val analyzer = ImageAnalysis(analyzerConfig).apply {
 
       setAnalyzer(executor, LuminosityAnalyzer())
+    }
+
+    return analyzer
+  }
+
+  fun createQRCodeAnalyzer(): ImageAnalysis{
+
+    val analyzerConfig = ImageAnalysisConfig.Builder().apply {
+
+      setLensFacing(lensFacing)
+      setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+    }.build()
+
+    val analyzer = ImageAnalysis(analyzerConfig).apply {
+
+      setAnalyzer(executor, QRCodeAnalyzer())
     }
 
     return analyzer
