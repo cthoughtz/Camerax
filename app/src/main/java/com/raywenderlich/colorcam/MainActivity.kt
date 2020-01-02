@@ -11,6 +11,7 @@ import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.image
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
 import java.io.File
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
   private var lensFacing = CameraX.LensFacing.BACK
   private val executor = Executors.newSingleThreadExecutor()
+  private var flashMode = FlashMode.OFF
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     requestCameraPermissions()
     setFlipButtonListener()
+    setFlashModeListener()
   }
 
   private fun hasAllPermissions() = REQUIRED_PERMISSIONS.all {
@@ -141,6 +144,7 @@ class MainActivity : AppCompatActivity() {
 
       setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
       setLensFacing(lensFacing)
+      setFlashMode(flashMode)
     }.build()
 
     val imageCapture = ImageCapture(imageCaptureConfig)
@@ -168,6 +172,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     return imageCapture
+  }
+
+  private fun setFlashModeListener(){
+
+    flashButton.setOnClickListener {
+
+      if (FlashMode.OFF == flashMode){
+        flashMode = FlashMode.ON
+        flashButton.setImageDrawable(getDrawable(R.drawable.ic_flash_on_black_48dp))
+      }else{
+        flashButton.setImageDrawable(getDrawable(R.drawable.ic_flash_off_black_48dp))
+        flashMode = FlashMode.OFF
+      }
+      bindCamera()
+    }
   }
 }
 
