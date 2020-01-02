@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     setContentView(R.layout.activity_main)
 
     requestCameraPermissions()
+    setFlipButtonListener()
   }
 
   private fun hasAllPermissions() = REQUIRED_PERMISSIONS.all {
@@ -110,6 +111,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     return preview
+  }
+
+  private fun setFlipButtonListener(){
+
+    flipButton.setOnClickListener {
+
+      if (CameraX.LensFacing.FRONT == lensFacing){
+
+        lensFacing = CameraX.LensFacing.BACK
+        flipButton.setImageDrawable(getDrawable(R.drawable.ic_camera_front_black_24dp))
+      }else{
+        lensFacing = CameraX.LensFacing.FRONT
+        flipButton.setImageDrawable(getDrawable(R.drawable.ic_camera_rear_black_48dp))
+      }
+    }
   }
 }
 
