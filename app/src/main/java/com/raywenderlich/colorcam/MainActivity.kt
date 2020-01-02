@@ -7,13 +7,14 @@ import android.util.Size
 import android.view.Surface
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraX
-import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.longToast
+import org.jetbrains.anko.toast
+import java.io.File
+import java.util.concurrent.Executors
 import java.util.jar.Manifest
 
 class MainActivity : AppCompatActivity() {
@@ -22,9 +23,12 @@ class MainActivity : AppCompatActivity() {
 
     private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
     private const val PERMISSIONS_CODE =1
+    private const val FILE_NAME = "yyyy-MM-dd-HH-mm-ss-SSS"
+    private const val PHOTO_EXTENSION = ".jpg"
   }
 
   private var lensFacing = CameraX.LensFacing.BACK
+  private val executor = Executors.newSingleThreadExecutor()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -55,7 +59,8 @@ class MainActivity : AppCompatActivity() {
     CameraX.unbindAll()
 
     val previewUseCase = createPreviewUseCase()
-    CameraX.bindToLifecycle(this, previewUseCase)
+    val imageCapture = createImageCaptureUseCase()
+    CameraX.bindToLifecycle(this, previewUseCase, imageCapture)
   }
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -126,6 +131,43 @@ class MainActivity : AppCompatActivity() {
         flipButton.setImageDrawable(getDrawable(R.drawable.ic_camera_rear_black_48dp))
       }
     }
+  }
+
+  private fun createImageCaptureUseCase(): ImageCapture{
+
+    val outputDirectory = getOutputDirectory(this)
+
+    val imageCaptureConfig = ImageCaptureConfig.Builder().apply {
+
+      setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+      setLensFacing(lensFacing)
+    }.build()
+
+    val imageCapture = ImageCapture(imageCaptureConfig)
+
+    captureButton.setOnClickListener {
+
+      val photoFile = createNewFile(outputDirectory, FILE_NAME, PHOTO_EXTENSION)
+      imageCapture.takePicture(photoFile, executor, object: ImageCapture.OnImageSavedListener{
+        override fun onImageSaved(file: File) {
+
+          textureView.post {
+            toast("Photo saved: ${file.absolutePath}")
+          }
+        }
+
+        override fun onError(
+          imageCaptureError: ImageCapture.ImageCaptureError, message: String, cause: Throwable?) {
+
+          textureView.post {
+            toast("Photo capture failed: $message")
+          }
+        }
+      })
+
+    }
+
+    return imageCapture
   }
 }
 
