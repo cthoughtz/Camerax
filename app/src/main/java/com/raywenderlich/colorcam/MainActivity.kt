@@ -63,7 +63,9 @@ class MainActivity : AppCompatActivity() {
 
     val previewUseCase = createPreviewUseCase()
     val imageCapture = createImageCaptureUseCase()
-    CameraX.bindToLifecycle(this, previewUseCase, imageCapture)
+    val luminosityAnalyzer = createLuminosityAnalyzer()
+
+    CameraX.bindToLifecycle(this, previewUseCase, imageCapture, luminosityAnalyzer)
   }
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -187,6 +189,22 @@ class MainActivity : AppCompatActivity() {
       }
       bindCamera()
     }
+  }
+
+  private fun createLuminosityAnalyzer(): ImageAnalysis{
+
+    val analyzerConfig = ImageAnalysisConfig.Builder().apply {
+
+      setLensFacing(lensFacing)
+      setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+    }.build()
+
+    val analyzer = ImageAnalysis(analyzerConfig).apply {
+
+      setAnalyzer(executor, LuminosityAnalyzer())
+    }
+
+    return analyzer
   }
 }
 
