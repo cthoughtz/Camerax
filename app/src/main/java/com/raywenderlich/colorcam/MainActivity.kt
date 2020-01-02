@@ -3,9 +3,13 @@ package com.raywenderlich.colorcam
 import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.os.Bundle
+import android.util.Size
 import android.view.Surface
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraX
+import androidx.camera.core.Preview
+import androidx.camera.core.PreviewConfig
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
@@ -19,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
     private const val PERMISSIONS_CODE =1
   }
+
+  private var lensFacing = CameraX.LensFacing.BACK
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -46,7 +52,9 @@ class MainActivity : AppCompatActivity() {
   private fun bindCamera(){
 
     CameraX.unbindAll()
-    CameraX.bindToLifecycle(this)
+
+    val previewUseCase = createPreviewUseCase()
+    CameraX.bindToLifecycle(this, previewUseCase)
   }
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -81,5 +89,32 @@ class MainActivity : AppCompatActivity() {
     matrix.postRotate(-rotationDegree.toFloat(), centerX,centerY)
     textureView.setTransform(matrix)
   }
+
+  fun createPreviewUseCase(): Preview{
+
+    val previewConfig = PreviewConfig.Builder().apply {
+
+      setTargetResolution(Size(textureView.width, textureView.height))
+      setLensFacing(lensFacing)
+    }.build()
+
+    val preview = Preview(previewConfig)
+
+    preview.setOnPreviewOutputUpdateListener{
+
+      val parent = textureView.parent as ViewGroup
+      parent.removeView(textureView)
+      parent.addView(textureView, 0)
+      textureView.surfaceTexture = it.surfaceTexture
+      updateTextureView()
+    }
+
+    return preview
+  }
 }
+
+
+
+
+
 
